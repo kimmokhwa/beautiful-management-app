@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
-import { Material, Procedure, materialsApi, proceduresApi } from '../services/api';
+import { materialsApi, proceduresApi } from '../services/api';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -54,7 +54,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
   const [success, setSuccess] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
     setError(null);
     setSuccess(null);
@@ -124,7 +124,11 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
               cost: Number(row.cost),
             }));
 
-            await Promise.all(materials.map(material => materialsApi.create(material)));
+            await Promise.all(materials.map(material => materialsApi.create({
+              name: material.name,
+              price: material.cost,
+              unit: '개'
+            })));
             setSuccess(`${materials.length}개의 재료가 성공적으로 업로드되었습니다.`);
           } else { // 시술 업로드
             const errors = validateProcedures(jsonData);

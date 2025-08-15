@@ -15,24 +15,22 @@ import {
   DialogActions,
   Box,
   InputAdornment,
-  IconButton,
+
   TableSortLabel,
   Typography,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Upload as UploadIcon } from '@mui/icons-material';
+import { Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Material, materialsApi } from '../services/api';
 import { BulkUpload } from './BulkUpload';
 import { Procedure, proceduresApi } from '../services/api';
-import { saveAs } from 'file-saver';
+
 import * as XLSX from 'xlsx';
 
 type Order = 'asc' | 'desc';
 
 interface ExtendedMaterial extends Material {
   cost?: number;
-  price?: number;
-  unit?: string;
 }
 
 export const MaterialList: React.FC = () => {
@@ -62,8 +60,11 @@ export const MaterialList: React.FC = () => {
   const materialUsageCount = useMemo(() => {
     const count: Record<string, number> = {};
     procedures.forEach(proc => {
-      proc.materials?.forEach(matName => {
-        count[matName] = (count[matName] || 0) + 1;
+      proc.materials?.forEach(mat => {
+        const matName = typeof mat === 'string' ? mat : mat.material_id?.toString() || '';
+        if (matName) {
+          count[matName] = (count[matName] || 0) + 1;
+        }
       });
     });
     return count;
@@ -96,7 +97,9 @@ export const MaterialList: React.FC = () => {
         if (property === 'cost') {
           return ((a[property] || 0) - (b[property] || 0)) * (isAsc ? 1 : -1);
         }
-        return ((a[property] || '') < (b[property] || '') ? -1 : 1) * (isAsc ? 1 : -1);
+        const aValue = (a as any)[property] || '';
+        const bValue = (b as any)[property] || '';
+        return (aValue < bValue ? -1 : 1) * (isAsc ? 1 : -1);
       });
     }
     setFilteredMaterials(sorted);

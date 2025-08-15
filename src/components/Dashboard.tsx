@@ -12,7 +12,6 @@ import {
   ListItemText,
   Divider,
   TextField,
-  InputAdornment,
   Button,
   Select,
   MenuItem,
@@ -35,7 +34,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { Procedure, Material, proceduresApi, materialsApi, goalProceduresApi } from '../services/api';
+import { Procedure, Material, proceduresApi, materialsApi } from '../services/api';
 import { supabase } from '../lib/supabase';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -43,7 +42,6 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Download } from '@mui/icons-material';
 
-const COLORS = ['#FF85A1', '#FFB7B7', '#FFD1DC', '#FFE5EC', '#FFF0F3'];
 const CHART_COLORS = ['#FF85A1', '#FFB7B7', '#FFD1DC', '#FFE5EC', '#FFF0F3'];
 
 interface StatCardProps {
@@ -78,7 +76,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color = '#FF85A1', te
 
 export const Dashboard: React.FC = () => {
   const [procedures, setProcedures] = useState<Procedure[]>([]);
-  const [materials, setMaterials] = useState<Material[]>([]);
+
   const [stats, setStats] = useState({
     totalProcedures: 0,
     totalMaterials: 0,
@@ -91,9 +89,8 @@ export const Dashboard: React.FC = () => {
   const [marginRangeStats, setMarginRangeStats] = useState<{ range: string; count: number }[]>([]);
   const [topProcedures, setTopProcedures] = useState<Procedure[]>([]);
   const [topMaterials, setTopMaterials] = useState<Material[]>([]);
-  const [goalSalesCount, setGoalSalesCount] = useState<number>(100);
-  const [goalAchieveRate, setGoalAchieveRate] = useState<number>(0);
-  const [procedureGoals, setProcedureGoals] = useState<{ [id: number]: number }>({});
+  const [goalSalesCount] = useState<number>(100);
+
   const [goalTop5, setGoalTop5] = useState<{ id: number | null; goal: number }[]>([
     { id: null, goal: 0 },
     { id: null, goal: 0 },
@@ -106,7 +103,7 @@ export const Dashboard: React.FC = () => {
 
   // Dashboard 컴포넌트 내부
   // 상담직원 이름/판매량 상태
-  const [consultants, setConsultants] = useState<{ name: string; sales: number }[]>([
+  const [consultants] = useState<{ name: string; sales: number }[]>([
     { name: '', sales: 0 },
     { name: '', sales: 0 },
     { name: '', sales: 0 },
@@ -128,7 +125,7 @@ export const Dashboard: React.FC = () => {
         materialsApi.getAll()
       ]);
       setProcedures(proceduresData);
-      setMaterials(materialsData);
+      setTopMaterials(materialsData);
 
       // 기본 통계 계산
       const totalRevenue = proceduresData.reduce((sum, p) => sum + (p.price || 0), 0);
@@ -195,7 +192,7 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     // 목표 달성률 계산 (전체 시술 판매량 합산)
     const totalSales = procedures.reduce((sum, p) => sum + (p.sales_count || 0), 0);
-    setGoalAchieveRate(goalSalesCount > 0 ? Math.round((totalSales / goalSalesCount) * 100) : 0);
+    // setGoalAchieveRate(goalSalesCount > 0 ? Math.round((totalSales / goalSalesCount) * 100) : 0);
   }, [procedures, goalSalesCount]);
 
   // 목표/마진 TOP5 불러오기 (type 구분)
@@ -250,7 +247,7 @@ export const Dashboard: React.FC = () => {
       // 목표 TOP5만 저장
       const saveList = goalTop5.filter(item => item.id).map(item => ({ procedure_id: item.id!, goal_count: item.goal, type: 'goal_top5' }));
       console.log('목표 TOP5 저장할 데이터:', saveList);
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('goal_procedures')
         .upsert(saveList, { onConflict: 'procedure_id' })
         .select();
@@ -273,7 +270,7 @@ export const Dashboard: React.FC = () => {
         type: 'margin_top5'
       }));
       console.log('마진 TOP5 저장할 데이터:', marginSaveList);
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('goal_procedures')
         .upsert(marginSaveList, { onConflict: 'procedure_id' })
         .select();
@@ -685,7 +682,7 @@ export const Dashboard: React.FC = () => {
                       outerRadius={100}
                       label
                     >
-                      {marginRangeStats.map((entry, index) => (
+                      {marginRangeStats.map((_entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
                           fill={CHART_COLORS[index % CHART_COLORS.length]} 

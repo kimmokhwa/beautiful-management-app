@@ -7,7 +7,7 @@ import {
   Card,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { addProcedure } from '../supabase';
+import { proceduresApi } from '../services/api';
 
 interface Material {
   name: string;
@@ -38,11 +38,13 @@ export const AddProcedureForm: React.FC = () => {
 
     try {
       setLoading(true);
-      await addProcedure({
+      await proceduresApi.create({
         category,
         name,
         price: parseInt(customerPrice),
-        materials: materials.map(m => `${m.name} ${m.quantity}`),
+        cost: 0, // 기본값 설정
+        margin: parseInt(customerPrice),
+        margin_rate: 100,
       });
       
       // 폼 초기화
