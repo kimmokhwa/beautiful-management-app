@@ -16,7 +16,7 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { materialsApi } from '../lib/supabase';
 import { EditMaterialModal } from './EditMaterialModal';
-import { Material } from '../types';
+import { Material } from '../services/api';
 
 export const MaterialsTable: React.FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -36,6 +36,7 @@ export const MaterialsTable: React.FC = () => {
       const formattedData = data.map((m: any) => ({
         id: m.id,
         name: m.name,
+        cost: m.cost || m.price || 0,
         price: m.price || 0,
         unit: m.unit || '',
         usage_count: m.usage_count || 0
@@ -115,7 +116,7 @@ export const MaterialsTable: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleEdit({ id: 0, name: '', price: 0, unit: '', usage_count: 0 })}
+          onClick={() => handleEdit({ id: 0, name: '', cost: 0, price: 0, unit: '', usage_count: 0 })}
           sx={{ bgcolor: '#4caf50', '&:hover': { bgcolor: '#388e3c' } }}
         >
           재료 추가

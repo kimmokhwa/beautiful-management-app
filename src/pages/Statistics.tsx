@@ -1,3 +1,4 @@
+import React from 'react';
 import { Grid, Paper, Typography, Box } from '@mui/material';
 import {
   TrendingUp as ProfitIcon,

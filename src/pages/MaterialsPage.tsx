@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Box, Typography } from '@mui/material';
 import MaterialTable from '../components/MaterialTable';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../lib/supabase';
 
 interface Material {
   id: number;
@@ -34,7 +34,7 @@ const MaterialsPage: React.FC = () => {
 
       if (error) throw error;
 
-      const materialsWithCount = data.map(item => ({
+      const materialsWithCount = data.map((item: any) => ({
         id: item.id,
         name: item.name,
         price: item.price,

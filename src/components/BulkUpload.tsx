@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
-import { Material, Procedure, materialsApi, proceduresApi } from '../services/api';
+import { materialsApi, proceduresApi } from '../services/api';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -54,7 +54,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
   const [success, setSuccess] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
     setError(null);
     setSuccess(null);
@@ -121,7 +121,10 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
 
             const materials = jsonData.map((row: any) => ({
               name: row.name,
-              cost: Number(row.cost),
+              cost: Number(row.cost || 0),
+              price: Number(row.price || row.cost || 0),
+              unit: row.unit || '개',
+              usage_count: 0,
             }));
 
             await Promise.all(materials.map(material => materialsApi.create(material)));

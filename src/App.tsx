@@ -11,7 +11,7 @@ import CircleIcon from '@mui/icons-material/Circle';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import SearchIcon from '@mui/icons-material/Search';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
+
 import InsightsIcon from '@mui/icons-material/Insights';
 
 function App() {

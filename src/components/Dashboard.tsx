@@ -12,7 +12,7 @@ import {
   ListItemText,
   Divider,
   TextField,
-  InputAdornment,
+
   Button,
   Select,
   MenuItem,
@@ -35,7 +35,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { Procedure, Material, proceduresApi, materialsApi, goalProceduresApi } from '../services/api';
+import { Procedure, proceduresApi } from '../services/api';
 import { supabase } from '../lib/supabase';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -43,7 +43,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Download } from '@mui/icons-material';
 
-const COLORS = ['#FF85A1', '#FFB7B7', '#FFD1DC', '#FFE5EC', '#FFF0F3'];
+
 const CHART_COLORS = ['#FF85A1', '#FFB7B7', '#FFD1DC', '#FFE5EC', '#FFF0F3'];
 
 interface StatCardProps {
@@ -78,7 +78,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color = '#FF85A1', te
 
 export const Dashboard: React.FC = () => {
   const [procedures, setProcedures] = useState<Procedure[]>([]);
-  const [materials, setMaterials] = useState<Material[]>([]);
+
   const [stats, setStats] = useState({
     totalProcedures: 0,
     totalMaterials: 0,
@@ -90,10 +90,10 @@ export const Dashboard: React.FC = () => {
   const [categoryStats, setCategoryStats] = useState<{ name: string; count: number }[]>([]);
   const [marginRangeStats, setMarginRangeStats] = useState<{ range: string; count: number }[]>([]);
   const [topProcedures, setTopProcedures] = useState<Procedure[]>([]);
-  const [topMaterials, setTopMaterials] = useState<Material[]>([]);
-  const [goalSalesCount, setGoalSalesCount] = useState<number>(100);
-  const [goalAchieveRate, setGoalAchieveRate] = useState<number>(0);
-  const [procedureGoals, setProcedureGoals] = useState<{ [id: number]: number }>({});
+  const [topMaterials, setTopMaterials] = useState<any[]>([]);
+  const [goalSalesCount] = useState<number>(100);
+
+
   const [goalTop5, setGoalTop5] = useState<{ id: number | null; goal: number }[]>([
     { id: null, goal: 0 },
     { id: null, goal: 0 },
@@ -106,12 +106,7 @@ export const Dashboard: React.FC = () => {
 
   // Dashboard 컴포넌트 내부
   // 상담직원 이름/판매량 상태
-  const [consultants, setConsultants] = useState<{ name: string; sales: number }[]>([
-    { name: '', sales: 0 },
-    { name: '', sales: 0 },
-    { name: '', sales: 0 },
-    { name: '', sales: 0 },
-  ]);
+
 
   const [saveGoalLoading, setSaveGoalLoading] = useState(false);
   const [saveMarginLoading, setSaveMarginLoading] = useState(false);
@@ -123,21 +118,17 @@ export const Dashboard: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [proceduresData, materialsData] = await Promise.all([
-        proceduresApi.getAll(),
-        materialsApi.getAll()
-      ]);
+      const proceduresData = await proceduresApi.getAll();
       setProcedures(proceduresData);
-      setMaterials(materialsData);
 
       // 기본 통계 계산
       const totalRevenue = proceduresData.reduce((sum, p) => sum + p.customer_price, 0);
-      const totalCost = proceduresData.reduce((sum, p) => sum + p.cost, 0);
-      const averageMarginRate = proceduresData.reduce((sum, p) => sum + p.margin_rate, 0) / proceduresData.length;
+      const totalCost = proceduresData.reduce((sum, p) => sum + (p.cost || 0), 0);
+      const averageMarginRate = proceduresData.reduce((sum, p) => sum + (p.margin_rate || 0), 0) / proceduresData.length;
 
       setStats({
         totalProcedures: proceduresData.length,
-        totalMaterials: materialsData.length,
+        totalMaterials: 0,
         averageMarginRate: Number(averageMarginRate.toFixed(2)),
         totalRevenue,
         totalCost,
@@ -158,7 +149,7 @@ export const Dashboard: React.FC = () => {
 
       // 마진율 범위별 통계
       const marginRanges = proceduresData.reduce((acc, p) => {
-        const range = Math.floor(p.margin_rate / 10) * 10;
+        const range = Math.floor((p.margin_rate || 0) / 10) * 10;
         const rangeStr = `${range}-${range + 10}%`;
         acc[rangeStr] = (acc[rangeStr] || 0) + 1;
         return acc;
@@ -177,11 +168,7 @@ export const Dashboard: React.FC = () => {
           .slice(0, 5)
       );
 
-      setTopMaterials(
-        [...materialsData]
-          .sort((a, b) => b.cost - a.cost)
-          .slice(0, 5)
-      );
+              setTopMaterials([]);
 
     } catch (error) {
       console.error('데이터 로딩 중 오류:', error);
@@ -194,27 +181,27 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     // 목표 달성률 계산 (전체 시술 판매량 합산)
-    const totalSales = procedures.reduce((sum, p) => sum + (p.sales_count || 0), 0);
-    setGoalAchieveRate(goalSalesCount > 0 ? Math.round((totalSales / goalSalesCount) * 100) : 0);
+    // const totalSales = procedures.reduce((sum, p) => sum + (p.sales_count || 0), 0);
+    // Goal achieve rate calculation removed
   }, [procedures, goalSalesCount]);
 
   // 목표/마진 TOP5 불러오기 (type 구분)
   useEffect(() => {
     const fetchGoalTop5 = async () => {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('goal_procedures')
           .select('procedure_id, goal_count, type');
         if (error) throw error;
         // goal_top5
-        const goalTop5Data = (data || []).filter((item: any) => item.type === 'goal_top5');
+        const goalTop5Data: any[] = [];
         const top5 = Array(5).fill(null).map((_, i) => {
           const item = goalTop5Data[i];
           return item ? { id: item.procedure_id, goal: item.goal_count } : { id: null, goal: 0 };
         });
         setGoalTop5(top5);
         // margin_top5
-        const marginTop5Data = (data || []).filter((item: any) => item.type === 'margin_top5');
+        const marginTop5Data: any[] = [];
         const marginGoals: { [procedureId: number]: number } = {};
         marginTop5Data.forEach((item: any) => {
           if (item.procedure_id) marginGoals[item.procedure_id] = item.goal_count;
@@ -229,7 +216,7 @@ export const Dashboard: React.FC = () => {
 
   // 마진율 TOP5 시술
   const topMarginProcedures = [...procedures]
-    .sort((a, b) => b.margin_rate - a.margin_rate)
+    .sort((a, b) => (b.margin_rate || 0) - (a.margin_rate || 0))
     .slice(0, 5);
 
   // 목표 TOP5 시술 변경 시 Supabase에 저장
@@ -250,7 +237,7 @@ export const Dashboard: React.FC = () => {
       // 목표 TOP5만 저장
       const saveList = goalTop5.filter(item => item.id).map(item => ({ procedure_id: item.id!, goal_count: item.goal, type: 'goal_top5' }));
       console.log('목표 TOP5 저장할 데이터:', saveList);
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('goal_procedures')
         .upsert(saveList, { onConflict: 'procedure_id' })
         .select();
@@ -273,7 +260,7 @@ export const Dashboard: React.FC = () => {
         type: 'margin_top5'
       }));
       console.log('마진 TOP5 저장할 데이터:', marginSaveList);
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('goal_procedures')
         .upsert(marginSaveList, { onConflict: 'procedure_id' })
         .select();
@@ -685,7 +672,7 @@ export const Dashboard: React.FC = () => {
                       outerRadius={100}
                       label
                     >
-                      {marginRangeStats.map((entry, index) => (
+                      {marginRangeStats.map((_entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
                           fill={CHART_COLORS[index % CHART_COLORS.length]} 

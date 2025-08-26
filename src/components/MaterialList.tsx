@@ -15,16 +15,16 @@ import {
   DialogActions,
   Box,
   InputAdornment,
-  IconButton,
+
   TableSortLabel,
   Typography,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Upload as UploadIcon } from '@mui/icons-material';
+import { Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Material, materialsApi } from '../services/api';
 import { BulkUpload } from './BulkUpload';
 import { Procedure, proceduresApi } from '../services/api';
-import { saveAs } from 'file-saver';
+
 import * as XLSX from 'xlsx';
 
 type Order = 'asc' | 'desc';
@@ -94,7 +94,7 @@ export const MaterialList: React.FC = () => {
         if (property === 'cost') {
           return ((a[property] || 0) - (b[property] || 0)) * (isAsc ? 1 : -1);
         }
-        return ((a[property] || '') < (b[property] || '') ? -1 : 1) * (isAsc ? 1 : -1);
+        return ((a[property as keyof ExtendedMaterial] || '') < (b[property as keyof ExtendedMaterial] || '') ? -1 : 1) * (isAsc ? 1 : -1);
       });
     }
     setFilteredMaterials(sorted);

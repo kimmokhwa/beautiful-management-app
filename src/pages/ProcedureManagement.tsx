@@ -60,7 +60,7 @@ const ProcedureManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [procedures, setProcedures] = useState<Procedure[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProcedure, setEditingProcedure] = useState<Procedure | null>(null);

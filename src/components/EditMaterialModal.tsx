@@ -8,18 +8,10 @@ import {
   DialogTitle,
   IconButton,
   TextField,
-  Typography
+
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { Material as MaterialType } from '../types';
-interface Material {
-  id: number;
-  name: string;
-  price: number;
-  unit: string;
-  usage_count?: number;
-  sales_count?: number;
-}
+import { Material } from '../services/api';
 
 interface EditMaterialModalProps {
   open: boolean;
@@ -57,6 +49,7 @@ export const EditMaterialModal: React.FC<EditMaterialModalProps> = ({
     onSave({
       id: material?.id || 0,
       name,
+      cost: price, // cost와 price를 동일하게 설정
       price,
       unit,
       usage_count: material?.usage_count || 0,

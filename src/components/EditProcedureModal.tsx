@@ -20,7 +20,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import { materialsApi } from '../lib/supabase';
-import { Material, Procedure as ProcedureType, ProcedureMaterial } from '../types';
+import { Material, ProcedureMaterial } from '../types';
 
 interface Procedure {
   id: number;

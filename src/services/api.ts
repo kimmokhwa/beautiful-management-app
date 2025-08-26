@@ -4,6 +4,11 @@ export interface Material {
   id: number;
   name: string;
   cost: number;
+  price: number;
+  unit: string;
+  usage_count: number;
+  sales_count?: number;
+  sale_count?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -38,7 +43,14 @@ export const materialsApi = {
       .order('name');
     
     if (error) throw error;
-    return data;
+    
+    // 데이터에 기본값 설정
+    return (data || []).map(material => ({
+      ...material,
+      usage_count: material.usage_count || 0,
+      sales_count: material.sales_count || 0,
+      sale_count: material.sale_count || 0
+    }));
   },
 
   create: async (material: Omit<Material, 'id'>): Promise<Material> => {

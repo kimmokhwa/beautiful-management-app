@@ -25,11 +25,11 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Procedure, Material, proceduresApi, materialsApi } from '../services/api';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Upload as UploadIcon } from '@mui/icons-material';
+import { Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
 import { BulkUpload } from './BulkUpload';
 import { Typography } from '@mui/material';
 import { Box as MuiBox } from '@mui/material';
-import { saveAs } from 'file-saver';
+
 import * as XLSX from 'xlsx';
 
 type Order = 'asc' | 'desc';
@@ -190,15 +190,6 @@ export const ProcedureList: React.FC<{ showDownloadButton?: boolean }> = ({ show
     });
   };
 
-  const handleCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cost = parseInt(e.target.value) || 0;
-    const customerPrice = editingProcedure.customer_price || 0;
-    setEditingProcedure({
-      ...editingProcedure,
-      cost,
-      ...calculateMargin(customerPrice, cost)
-    });
-  };
 
   const handleBulkUploadSuccess = () => {
     loadData();

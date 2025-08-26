@@ -31,16 +31,17 @@ interface Material {
 interface MaterialFormData {
   name: string;
   price: string;
+  unit: string;
 }
 
 const MaterialManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
-  const [formData, setFormData] = useState<MaterialFormData>({ name: '', price: '' });
+  const [formData, setFormData] = useState<MaterialFormData>({ name: '', price: '', unit: '' });
 
   useEffect(() => {
     loadMaterials();
@@ -61,10 +62,10 @@ const MaterialManagement = () => {
   const handleOpenDialog = (material?: Material) => {
     if (material) {
       setEditingMaterial(material);
-      setFormData({ name: material.name, price: material.price.toString() });
+      setFormData({ name: material.name, price: material.price?.toString() || '', unit: (material as any).unit || '' });
     } else {
       setEditingMaterial(null);
-      setFormData({ name: '', price: '' });
+      setFormData({ name: '', price: '', unit: '' });
     }
     setIsDialogOpen(true);
   };
@@ -72,7 +73,7 @@ const MaterialManagement = () => {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingMaterial(null);
-    setFormData({ name: '', price: '' });
+    setFormData({ name: '', price: '', unit: '' });
   };
 
   const handleSubmit = async () => {
@@ -81,11 +82,13 @@ const MaterialManagement = () => {
         await materialsApi.update(editingMaterial.id, {
           name: formData.name,
           price: Number(formData.price),
+          unit: formData.unit,
         });
       } else {
         await materialsApi.create({
           name: formData.name,
           price: Number(formData.price),
+          unit: formData.unit,
         });
       }
       await loadMaterials();
@@ -176,6 +179,13 @@ const MaterialManagement = () => {
             fullWidth
             value={formData.price}
             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="단위"
+            fullWidth
+            value={formData.unit}
+            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
