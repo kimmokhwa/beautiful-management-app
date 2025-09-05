@@ -7,7 +7,7 @@ import {
   Card,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { addProcedure } from '../supabase';
+import { proceduresApi } from '../services/api';
 
 interface Material {
   name: string;
@@ -38,7 +38,7 @@ export const AddProcedureForm: React.FC = () => {
 
     try {
       setLoading(true);
-      await addProcedure({
+      await proceduresApi.create({
         category,
         name,
         customer_price: parseInt(customerPrice),

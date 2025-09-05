@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
-import { materialsApi } from '../lib/supabase';
+import { materialsApi } from '../services/api';
 import { Material, ProcedureMaterial } from '../types';
 
 interface Procedure {

@@ -5,7 +5,7 @@ import { theme } from './styles/theme';
 import { MaterialList } from './components/MaterialList';
 import { ProcedureList } from './components/ProcedureList';
 import { Dashboard } from './components/Dashboard';
-import { migrateProcedureMaterials } from './utils/migration';
+// 마이그레이션 기능 비활성화 - 필요시 재활성화
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import CircleIcon from '@mui/icons-material/Circle';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
@@ -21,9 +21,10 @@ function App() {
     setValue(newValue);
   };
 
-  React.useEffect(() => {
-    migrateProcedureMaterials();
-  }, []);
+  // 마이그레이션 비활성화
+  // React.useEffect(() => {
+  //   migrateProcedureMaterials();
+  // }, []);
 
   const TabButton = ({ 
     icon, 

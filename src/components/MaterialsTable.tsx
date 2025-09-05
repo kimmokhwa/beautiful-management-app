@@ -14,7 +14,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { materialsApi } from '../lib/supabase';
+import { materialsApi } from '../services/api';
 import { EditMaterialModal } from './EditMaterialModal';
 import { Material } from '../services/api';
 
@@ -116,7 +116,7 @@ export const MaterialsTable: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleEdit({ id: 0, name: '', cost: 0, price: 0, unit: '', usage_count: 0 })}
+          onClick={() => handleEdit({ id: 0, name: '', cost: 0, usage_count: 0 })}
           sx={{ bgcolor: '#4caf50', '&:hover': { bgcolor: '#388e3c' } }}
         >
           재료 추가
@@ -160,7 +160,7 @@ export const MaterialsTable: React.FC = () => {
                   />
                 </TableCell>
                 <TableCell>{material.name}</TableCell>
-                <TableCell align="right">₩{material.price.toLocaleString()}</TableCell>
+                <TableCell align="right">₩{material.cost.toLocaleString()}</TableCell>
                 <TableCell align="right">{material.usage_count}개 시술</TableCell>
                 <TableCell align="center">
                   <Button

@@ -17,7 +17,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { EditProcedureModal } from './EditProcedureModal';
-import { proceduresApi } from '../lib/supabase';
+import { proceduresApi } from '../services/api';
 import { Procedure } from '../types';
 
 export const ProceduresTable: React.FC = () => {
@@ -35,32 +35,7 @@ export const ProceduresTable: React.FC = () => {
   const loadProcedures = async () => {
     try {
       const data = await proceduresApi.getAll();
-      const formattedData = data.map((p: any) => ({
-        id: p.id,
-        category: p.category,
-        name: p.name,
-        customer_price: p.price || 0,
-        total_cost: p.cost || 0,
-        margin: (p.price || 0) - (p.cost || 0),
-        margin_rate: p.price ? ((p.price - (p.cost || 0)) / p.price * 100) : 0,
-        materials: p.procedure_materials?.map((m: any) => ({
-          material_id: m.material_id,
-          quantity: m.quantity
-        })) || []
-      }));
-      // 타입 오류를 해결하기 위해 formattedData를 Procedure 타입에 맞게 변환
-      setProcedures(
-        formattedData.map((item: any) => ({
-          id: item.id,
-          category: item.category,
-          name: item.name,
-          price: item.customer_price, // Procedure 타입에 맞게 price로 매핑
-          cost: item.total_cost,      // Procedure 타입에 맞게 cost로 매핑
-          margin: item.margin,
-          margin_rate: item.margin_rate,
-          materials: item.materials
-        }))
-      );
+      setProcedures(data);
     } catch (error) {
       console.error('시술 목록 불러오기 중 오류 발생:', error);
     } finally {
@@ -184,9 +159,7 @@ export const ProceduresTable: React.FC = () => {
               <TableCell sx={{ textAlign: 'center' }}>분류</TableCell>
               <TableCell sx={{ textAlign: 'center' }}>시술명</TableCell>
               <TableCell align="right" sx={{ textAlign: 'center' }}>고객가</TableCell>
-              <TableCell align="right" sx={{ textAlign: 'center' }}>총 원가</TableCell>
-              <TableCell align="right" sx={{ textAlign: 'center' }}>마진</TableCell>
-              <TableCell align="right" sx={{ textAlign: 'center' }}>마진율</TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>재료</TableCell>
               <TableCell align="center" sx={{ textAlign: 'center' }}>작업</TableCell>
             </TableRow>
           </TableHead>
@@ -212,28 +185,13 @@ export const ProceduresTable: React.FC = () => {
                 </TableCell>
                 <TableCell sx={{ textAlign: 'center' }}>{procedure.name}</TableCell>
                 <TableCell align="right" sx={{ textAlign: 'center' }}>
-                  ₩{('customer_price' in procedure && typeof procedure.customer_price === 'number'
-                    ? procedure.customer_price
-                    : 0
-                  ).toLocaleString()}
+                  ₩{procedure.customer_price.toLocaleString()}
                 </TableCell>
-                <TableCell align="right" sx={{ textAlign: 'center' }}>
-                  ₩{('total_cost' in procedure && typeof procedure.total_cost === 'number'
-                    ? procedure.total_cost
-                    : 0
-                  ).toLocaleString()}
-                </TableCell>
-                <TableCell align="right" sx={{ textAlign: 'center' }}>
-                  ₩{('margin' in procedure && typeof procedure.margin === 'number'
-                    ? procedure.margin
-                    : 0
-                  ).toLocaleString()}
-                </TableCell>
-                <TableCell align="right" sx={{ textAlign: 'center' }}>
-                  {('margin_rate' in procedure && typeof procedure.margin_rate === 'number'
-                    ? procedure.margin_rate
-                    : 0
-                  ).toFixed(2)}%
+                <TableCell sx={{ textAlign: 'center' }}>
+                  {procedure.materials && procedure.materials.length > 0 
+                    ? procedure.materials.join(', ')
+                    : '재료 없음'
+                  }
                 </TableCell>
                 <TableCell align="center" sx={{ textAlign: 'center' }}>
                   <Button
@@ -280,7 +238,7 @@ export const ProceduresTable: React.FC = () => {
           setEditModalOpen(false);
           setSelectedProcedure(null);
         }}
-        onSave={handleEditComplete}
+        onSave={handleEditComplete as any}
       />
     </Box>
   );

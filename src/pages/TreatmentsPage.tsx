@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Box, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import TreatmentTable from '../components/TreatmentTable';
-import { supabase } from '../lib/supabase';
+import { proceduresApi } from '../services/api';
 
 interface Treatment {
   id: number;
@@ -22,25 +22,13 @@ const TreatmentsPage: React.FC = () => {
 
   const fetchTreatments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('treatments')
-        .select(`
-          id,
-          name,
-          cost,
-          usage_count
-        `)
-        .order(sortField, { ascending: sortDirection === 'asc' });
-
-      if (error) throw error;
-
-      const formattedData = data.map(item => ({
+      const data = await proceduresApi.getAll();
+      const formattedData = data.map((item: any) => ({
         id: item.id,
         name: item.name,
-        cost: item.cost,
-        usageCount: item.usage_count || 0
+        cost: item.cost || 0,
+        usageCount: item.sales_count || 0,
       }));
-
       setTreatments(formattedData);
     } catch (error) {
       console.error('시술 목록을 불러오는데 실패했습니다:', error);

@@ -86,9 +86,6 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
       if (isNaN(procedure.customer_price) || procedure.customer_price < 0) {
         errors.push(`행 ${index + 2}: 고객 가격이 유효하지 않습니다.`);
       }
-      if (isNaN(procedure.cost) || procedure.cost < 0) {
-        errors.push(`행 ${index + 2}: 비용이 유효하지 않습니다.`);
-      }
     });
     return errors;
   };
@@ -122,9 +119,6 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
             const materials = jsonData.map((row: any) => ({
               name: row.name,
               cost: Number(row.cost || 0),
-              price: Number(row.price || row.cost || 0),
-              unit: row.unit || '개',
-              usage_count: 0,
             }));
 
             await Promise.all(materials.map(material => materialsApi.create(material)));
@@ -140,8 +134,10 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
               name: row.name,
               category: row.category,
               customer_price: Number(row.customer_price),
-              cost: Number(row.cost),
-              materials: [], // 초기에는 빈 배열로 설정
+              materials: (row.materials ? String(row.materials) : '')
+                .split(',')
+                .map((s: string) => s.trim())
+                .filter((s: string) => s.length > 0),
             }));
 
             await Promise.all(procedures.map(procedure => proceduresApi.create(procedure)));
@@ -178,9 +174,9 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
     } else {
       // 시술 템플릿
       ws = XLSX.utils.aoa_to_sheet([
-        ['name', 'category', 'customer_price', 'cost'],
-        ['커트', '헤어', 15000, 5000],
-        ['염색', '헤어', 50000, 20000],
+        ['name', 'category', 'customer_price', 'materials'],
+        ['커트', '헤어', 15000, '가위, 드라이어'],
+        ['염색', '헤어', 50000, '염색약, 산화제'],
       ]);
     }
 
@@ -228,7 +224,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ open, onClose, onSuccess
               <ListItemText primary="customer_price" secondary="고객 가격 (숫자)" />
             </ListItem>
             <ListItem>
-              <ListItemText primary="cost" secondary="비용 (숫자)" />
+              <ListItemText primary="materials" secondary="재료 목록 (쉼표로 구분된 문자열)" />
             </ListItem>
           </List>
         </TabPanel>

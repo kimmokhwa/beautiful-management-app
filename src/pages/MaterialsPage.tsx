@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Box, Typography } from '@mui/material';
 import MaterialTable from '../components/MaterialTable';
-import { supabase } from '../lib/supabase';
+import { materialsApi } from '../services/api';
 
 interface Material {
   id: number;
@@ -22,25 +22,19 @@ const MaterialsPage: React.FC = () => {
 
   const fetchMaterials = async () => {
     try {
-      const { data, error } = await supabase
-        .from('materials')
-        .select(`
-          id,
-          name,
-          price,
-          treatments (id)
-        `)
-        .order(sortField, { ascending: sortDirection === 'asc' });
-
-      if (error) throw error;
-
-      const materialsWithCount = data.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        usageCount: item.treatments?.length || 0
-      }));
-
+      const data = await materialsApi.getAll();
+      const materialsWithCount = data
+        .sort((a, b) => {
+          const dir = sortDirection === 'asc' ? 1 : -1;
+          if (sortField === 'name') return (a.name > b.name ? 1 : -1) * dir;
+          return 0;
+        })
+        .map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: item.cost,
+          usageCount: item.usage_count || 0
+        }));
       setMaterials(materialsWithCount);
     } catch (error) {
       console.error('재료 목록을 불러오는데 실패했습니다:', error);
@@ -63,13 +57,7 @@ const MaterialsPage: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      const { error } = await supabase
-        .from('materials')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      // 이 페이지에서는 UI만 제공. 실제 삭제는 MaterialsTable에서 수행됨
       setMaterials(prev => prev.filter(material => material.id !== id));
       setSelectedItems(prev => prev.filter(itemId => itemId !== id));
     } catch (error) {

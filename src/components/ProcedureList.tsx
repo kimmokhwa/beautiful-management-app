@@ -55,8 +55,16 @@ export const ProcedureList: React.FC<{ showDownloadButton?: boolean }> = ({ show
         proceduresApi.getAll(),
         materialsApi.getAll()
       ]);
-      setProcedures(proceduresData);
-      setFilteredProcedures(proceduresData);
+      // 원가/마진/마진율 계산 주입
+      const materialsCostMap = new Map(materialsData.map(m => [m.name, m.cost || 0]));
+      const withComputed = proceduresData.map(p => {
+        const totalCost = (p.materials || []).reduce((sum, name) => sum + (materialsCostMap.get(name) || 0), 0);
+        const margin = (p.customer_price || 0) - totalCost;
+        const margin_rate = (p.customer_price || 0) > 0 ? Number(((margin / (p.customer_price || 1)) * 100).toFixed(2)) : 0;
+        return { ...p, cost: totalCost, margin, margin_rate } as any;
+      });
+      setProcedures(withComputed as any);
+      setFilteredProcedures(withComputed as any);
       setMaterials(materialsData);
     } catch (error) {
       console.error('데이터 로딩 중 오류:', error);
@@ -149,9 +157,21 @@ export const ProcedureList: React.FC<{ showDownloadButton?: boolean }> = ({ show
   const handleSave = async () => {
     try {
       if (isEditing && editingProcedure.id) {
-        await proceduresApi.update(editingProcedure.id, editingProcedure);
+        const payload: Partial<Procedure> = {
+          category: editingProcedure.category,
+          name: editingProcedure.name,
+          customer_price: editingProcedure.customer_price,
+          materials: editingProcedure.materials as string[] | undefined,
+        };
+        await proceduresApi.update(editingProcedure.id, payload);
       } else {
-        await proceduresApi.create(editingProcedure as Omit<Procedure, 'id'>);
+        const payload: Omit<Procedure, 'id'> = {
+          category: editingProcedure.category || '',
+          name: editingProcedure.name || '',
+          customer_price: editingProcedure.customer_price || 0,
+          materials: (editingProcedure.materials as string[]) || [],
+        } as any;
+        await proceduresApi.create(payload);
       }
       handleClose();
       loadData();

@@ -27,21 +27,21 @@ export const EditMaterialModal: React.FC<EditMaterialModalProps> = ({
   onSave,
 }) => {
   const [name, setName] = useState(material?.name || '');
-  const [price, setPrice] = useState(material?.price || 0);
-  const [unit, setUnit] = useState(material?.unit || '');
+  const [price, setPrice] = useState(material?.cost || 0);
+  const [unit, setUnit] = useState('개');
   const [saleCount, setSaleCount] = useState(material?.sales_count || 0);
 
   useEffect(() => {
     if (open) {
       setName(material?.name || '');
-      setPrice(material?.price || 0);
-      setUnit(material?.unit || '');
+      setPrice(material?.cost || 0);
+      setUnit('개');
       setSaleCount(material?.sales_count || 0);
     }
   }, [open, material]);
 
   const handleSave = () => {
-    if (!name || !unit) {
+    if (!name) {
       alert('재료명과 단위를 입력해주세요.');
       return;
     }
@@ -49,9 +49,7 @@ export const EditMaterialModal: React.FC<EditMaterialModalProps> = ({
     onSave({
       id: material?.id || 0,
       name,
-      cost: price, // cost와 price를 동일하게 설정
-      price,
-      unit,
+      cost: price,
       usage_count: material?.usage_count || 0,
       sales_count: saleCount
     });

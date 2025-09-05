@@ -1,22 +1,24 @@
 export interface Material {
   id: number;
   name: string;
-  price: number;
-  unit: string;
-  usage_count: number;
+  cost: number;
+  usage_count?: number;
   sales_count?: number; // 판매량(사용량) 필드 추가
   sale_count?: number;  // 호환성 위해 추가
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Procedure {
   id: number;
   category: string;
   name: string;
-  price: number;
-  cost: number;
-  materials: ProcedureMaterial[];
+  customer_price: number;
+  materials?: string[]; // DB에서는 text array로 저장됨
   sales_count?: number; // 판매량 필드 추가
   sale_count?: number;  // 호환성 위해 추가
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ProcedureMaterial {

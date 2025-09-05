@@ -25,7 +25,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { proceduresApi, materialsApi } from '@/lib/supabase';
+import { proceduresApi, materialsApi } from '../services/api';
 
 interface Material {
   id: number;
@@ -42,9 +42,8 @@ interface Procedure {
   id: number;
   category: string;
   name: string;
-  price: number;
-  cost: number;
-  procedure_materials: ProcedureMaterial[];
+  customer_price: number;
+  materials?: string[];
 }
 
 interface ProcedureFormData {
@@ -104,8 +103,8 @@ const ProcedureManagement = () => {
       setFormData({
         category: procedure.category,
         name: procedure.name,
-        price: procedure.price.toString(),
-        materials: procedure.procedure_materials,
+        price: procedure.customer_price.toString(),
+        materials: [], // materials는 문자열 배열로 별도 관리
       });
     } else {
       setEditingProcedure(null);
@@ -132,23 +131,22 @@ const ProcedureManagement = () => {
 
   const handleSubmit = async () => {
     try {
-      const cost = calculateCost(formData.materials);
+      // materials는 문자열 배열로 변환
+      const materialNames = formData.materials.map(m => getMaterialName(m.material_id));
       
       if (editingProcedure) {
         await proceduresApi.update(editingProcedure.id, {
           category: formData.category,
           name: formData.name,
-          price: Number(formData.price),
-          cost,
-          materials: formData.materials,
+          customer_price: Number(formData.price),
+          materials: materialNames,
         });
       } else {
         await proceduresApi.create({
           category: formData.category,
           name: formData.name,
-          price: Number(formData.price),
-          cost,
-          materials: formData.materials,
+          customer_price: Number(formData.price),
+          materials: materialNames,
         });
       }
       await loadData();
@@ -228,10 +226,7 @@ const ProcedureManagement = () => {
             <TableRow>
               <TableCell>카테고리</TableCell>
               <TableCell>시술명</TableCell>
-              <TableCell align="right">시술가</TableCell>
-              <TableCell align="right">원가</TableCell>
-              <TableCell align="right">마진</TableCell>
-              <TableCell align="right">마진율</TableCell>
+              <TableCell align="right">고객가</TableCell>
               <TableCell>사용 재료</TableCell>
               <TableCell align="center">관리</TableCell>
             </TableRow>
@@ -241,23 +236,20 @@ const ProcedureManagement = () => {
               <TableRow key={procedure.id}>
                 <TableCell>{procedure.category}</TableCell>
                 <TableCell>{procedure.name}</TableCell>
-                <TableCell align="right">{procedure.price.toLocaleString()}원</TableCell>
-                <TableCell align="right">{procedure.cost.toLocaleString()}원</TableCell>
-                <TableCell align="right">
-                  {(procedure.price - procedure.cost).toLocaleString()}원
-                </TableCell>
-                <TableCell align="right">
-                  {((procedure.price - procedure.cost) / procedure.price * 100).toFixed(1)}%
-                </TableCell>
+                <TableCell align="right">₩{procedure.customer_price.toLocaleString()}</TableCell>
                 <TableCell>
-                  {procedure.procedure_materials.map((material) => (
-                    <Chip
-                      key={material.material_id}
-                      label={`${getMaterialName(material.material_id)} x${material.quantity}`}
-                      size="small"
-                      sx={{ mr: 0.5, mb: 0.5 }}
-                    />
-                  ))}
+                  {procedure.materials && procedure.materials.length > 0 ? (
+                    procedure.materials.map((material, index) => (
+                      <Chip
+                        key={index}
+                        label={material}
+                        size="small"
+                        sx={{ mr: 0.5, mb: 0.5 }}
+                      />
+                    ))
+                  ) : (
+                    <span style={{ color: '#666' }}>재료 없음</span>
+                  )}
                 </TableCell>
                 <TableCell align="center">
                   <IconButton color="primary" onClick={() => handleOpenDialog(procedure)}>

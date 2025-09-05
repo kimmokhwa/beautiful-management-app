@@ -4,9 +4,7 @@ export interface Material {
   id: number;
   name: string;
   cost: number;
-  price: number;
-  unit: string;
-  usage_count: number;
+  usage_count?: number;
   sales_count?: number;
   sale_count?: number;
   created_at?: string;
@@ -18,10 +16,11 @@ export interface Procedure {
   category: string;
   name: string;
   customer_price: number;
+  materials?: string[];
+  // 계산용 선택 필드 (클라이언트에서 계산)
   cost?: number;
   margin?: number;
   margin_rate?: number;
-  materials?: string[];
   sales_count?: number;
   created_at?: string;
   updated_at?: string;
@@ -100,18 +99,23 @@ export const proceduresApi = {
     // 데이터에 기본값 설정
     return (data || []).map(procedure => ({
       ...procedure,
-      cost: procedure.cost || 0,
-      margin: procedure.margin || 0,
-      margin_rate: procedure.margin_rate || 0,
       materials: procedure.materials || [],
       sales_count: procedure.sales_count || 0
     }));
   },
 
   create: async (procedure: Omit<Procedure, 'id'>): Promise<Procedure> => {
+    // DB 컬럼만 전송하도록 정리
+    const payload = {
+      category: procedure.category,
+      name: procedure.name,
+      customer_price: procedure.customer_price,
+      materials: procedure.materials || [],
+    };
+
     const { data, error } = await supabase
       .from('procedures')
-      .insert([procedure])
+      .insert([payload])
       .select()
       .single();
     
@@ -120,9 +124,17 @@ export const proceduresApi = {
   },
 
   update: async (id: number, procedure: Partial<Procedure>): Promise<Procedure> => {
+    // 허용된 컬럼만 선택적으로 업데이트
+    const payload: any = {};
+    if (procedure.category !== undefined) payload.category = procedure.category;
+    if (procedure.name !== undefined) payload.name = procedure.name;
+    if (procedure.customer_price !== undefined) payload.customer_price = procedure.customer_price;
+    if (procedure.materials !== undefined) payload.materials = procedure.materials;
+    // sales_count 컬럼은 DB에 없으므로 전송하지 않음
+
     const { data, error } = await supabase
       .from('procedures')
-      .update(procedure)
+      .update(payload)
       .eq('id', id)
       .select()
       .single();
@@ -141,64 +153,33 @@ export const proceduresApi = {
   }
 };
 
-// Procedure Materials API
+// Procedure Materials API - 비활성화 (procedure_materials 테이블이 존재하지 않음)
+// procedures 테이블의 materials 컬럼(ARRAY 타입)을 직접 사용
 export const procedureMaterialsApi = {
+  // 더미 API - 실제 사용하지 않음
   getByProcedureId: async (procedureId: number): Promise<ProcedureMaterial[]> => {
-    const { data, error } = await supabase
-      .from('procedure_materials')
-      .select('*')
-      .eq('procedure_id', procedureId);
-    
-    if (error) throw error;
-    return data;
+    return [];
   },
 
   create: async (procedureMaterial: Omit<ProcedureMaterial, 'id'>): Promise<ProcedureMaterial> => {
-    const { data, error } = await supabase
-      .from('procedure_materials')
-      .insert([procedureMaterial])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    throw new Error('procedure_materials 테이블이 존재하지 않습니다.');
   },
 
   delete: async (id: number): Promise<void> => {
-    const { error } = await supabase
-      .from('procedure_materials')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    throw new Error('procedure_materials 테이블이 존재하지 않습니다.');
   },
 
-  // 시술에 사용되는 재료 일괄 업데이트
   updateProcedureMaterials: async (
     procedureId: number, 
     materialNames: string[]
   ): Promise<void> => {
-    // 1. 기존 재료 삭제
-    const { error: deleteError } = await supabase
-      .from('procedure_materials')
-      .delete()
-      .eq('procedure_id', procedureId);
+    // procedures 테이블의 materials 컬럼을 직접 업데이트
+    const { error } = await supabase
+      .from('procedures')
+      .update({ materials: materialNames })
+      .eq('id', procedureId);
     
-    if (deleteError) throw deleteError;
-
-    // 2. 새로운 재료 추가
-    if (materialNames.length > 0) {
-      const newMaterials = materialNames.map(name => ({
-        procedure_id: procedureId,
-        material_name: name
-      }));
-
-      const { error: insertError } = await supabase
-        .from('procedure_materials')
-        .insert(newMaterials);
-
-      if (insertError) throw insertError;
-    }
+    if (error) throw error;
   }
 }; 
 

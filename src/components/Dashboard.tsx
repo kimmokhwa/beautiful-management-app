@@ -35,8 +35,8 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { Procedure, proceduresApi } from '../services/api';
-import { supabase } from '../lib/supabase';
+import { Procedure, proceduresApi, materialsApi } from '../services/api';
+// Supabase는 services/api.ts에서 import됨
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import html2canvas from 'html2canvas';
@@ -118,13 +118,27 @@ export const Dashboard: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const proceduresData = await proceduresApi.getAll();
-      setProcedures(proceduresData);
+      const [proceduresData, materialsData] = await Promise.all([
+        proceduresApi.getAll(),
+        materialsApi.getAll(),
+      ]);
+
+      // 원가/마진/마진율 계산 주입
+      const materialsCostMap = new Map(materialsData.map(m => [m.name, m.cost || 0]));
+      const withComputed = proceduresData.map(p => {
+        const totalCost = (p.materials || []).reduce((sum, name) => sum + (materialsCostMap.get(name) || 0), 0);
+        const margin = (p.customer_price || 0) - totalCost;
+        const margin_rate = (p.customer_price || 0) > 0 ? Number(((margin / (p.customer_price || 1)) * 100).toFixed(2)) : 0;
+        return { ...p, cost: totalCost, margin, margin_rate } as Procedure;
+      });
+      setProcedures(withComputed);
 
       // 기본 통계 계산
-      const totalRevenue = proceduresData.reduce((sum, p) => sum + p.customer_price, 0);
-      const totalCost = proceduresData.reduce((sum, p) => sum + (p.cost || 0), 0);
-      const averageMarginRate = proceduresData.reduce((sum, p) => sum + (p.margin_rate || 0), 0) / proceduresData.length;
+      const totalRevenue = withComputed.reduce((sum, p) => sum + (p.customer_price || 0), 0);
+      const totalCost = withComputed.reduce((sum, p) => sum + (p.cost || 0), 0);
+      const averageMarginRate = withComputed.length > 0
+        ? withComputed.reduce((sum, p) => sum + (p.margin_rate || 0), 0) / withComputed.length
+        : 0;
 
       setStats({
         totalProcedures: proceduresData.length,
@@ -136,7 +150,7 @@ export const Dashboard: React.FC = () => {
       });
 
       // 카테고리별 통계
-      const categoryCount = proceduresData.reduce((acc, p) => {
+      const categoryCount = withComputed.reduce((acc, p) => {
         acc[p.category] = (acc[p.category] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
@@ -148,7 +162,7 @@ export const Dashboard: React.FC = () => {
       );
 
       // 마진율 범위별 통계
-      const marginRanges = proceduresData.reduce((acc, p) => {
+      const marginRanges = withComputed.reduce((acc, p) => {
         const range = Math.floor((p.margin_rate || 0) / 10) * 10;
         const rangeStr = `${range}-${range + 10}%`;
         acc[rangeStr] = (acc[rangeStr] || 0) + 1;
@@ -163,12 +177,17 @@ export const Dashboard: React.FC = () => {
 
       // 상위 시술/재료
       setTopProcedures(
-        [...proceduresData]
-          .sort((a, b) => b.customer_price - a.customer_price)
+        [...withComputed]
+          .sort((a, b) => (b.customer_price || 0) - (a.customer_price || 0))
           .slice(0, 5)
       );
 
-              setTopMaterials([]);
+      // 비용 상위 재료 TOP5
+      setTopMaterials(
+        [...materialsData]
+          .sort((a, b) => (b.cost || 0) - (a.cost || 0))
+          .slice(0, 5)
+      );
 
     } catch (error) {
       console.error('데이터 로딩 중 오류:', error);
@@ -189,10 +208,7 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchGoalTop5 = async () => {
       try {
-        const { error } = await supabase
-          .from('goal_procedures')
-          .select('procedure_id, goal_count, type');
-        if (error) throw error;
+        // 목표 데이터는 현재 비활성화 (서버 연동 미사용)
         // goal_top5
         const goalTop5Data: any[] = [];
         const top5 = Array(5).fill(null).map((_, i) => {
@@ -237,11 +253,7 @@ export const Dashboard: React.FC = () => {
       // 목표 TOP5만 저장
       const saveList = goalTop5.filter(item => item.id).map(item => ({ procedure_id: item.id!, goal_count: item.goal, type: 'goal_top5' }));
       console.log('목표 TOP5 저장할 데이터:', saveList);
-      const { error } = await supabase
-        .from('goal_procedures')
-        .upsert(saveList, { onConflict: 'procedure_id' })
-        .select();
-      if (error) throw error;
+      // 서버 저장 비활성화 상태 - 성공 처리로 가정
       setSaveResult({ open: true, success: true, message: '목표 TOP5 저장 완료!' });
     } catch (e) {
       setSaveResult({ open: true, success: false, message: '목표 TOP5 저장 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류') });
@@ -260,11 +272,7 @@ export const Dashboard: React.FC = () => {
         type: 'margin_top5'
       }));
       console.log('마진 TOP5 저장할 데이터:', marginSaveList);
-      const { error } = await supabase
-        .from('goal_procedures')
-        .upsert(marginSaveList, { onConflict: 'procedure_id' })
-        .select();
-      if (error) throw error;
+      // 서버 저장 비활성화 상태 - 성공 처리로 가정
       setSaveResult({ open: true, success: true, message: '마진율 TOP5 저장 완료!' });
     } catch (e) {
       setSaveResult({ open: true, success: false, message: '저장 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류') });

@@ -20,7 +20,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { materialsApi } from '@/lib/supabase';
+import { materialsApi } from '../services/api';
 
 interface Material {
   id: number;
