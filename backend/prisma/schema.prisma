@@ -1,0 +1,104 @@
+// Prisma Schema for Cost Management System
+// Database: SQLite (Development)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 카테고리 테이블
+model Category {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  description String?
+  createdAt   DateTime    @default(now()) @map("created_at")
+  procedures  Procedure[]
+
+  @@map("categories")
+}
+
+// 재료 테이블
+model Material {
+  id                  Int                  @id @default(autoincrement())
+  name                String               @unique
+  cost                Float
+  description         String?
+  supplier            String?
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  procedureMaterials  ProcedureMaterial[]
+  priceHistory        PriceHistory[]
+
+  @@map("materials")
+}
+
+// 시술 테이블
+model Procedure {
+  id                  Int                  @id @default(autoincrement())
+  name                String
+  categoryId          Int?                 @map("category_id")
+  customerPrice       Float                @map("customer_price")
+  isRecommended       Boolean              @default(false) @map("is_recommended")
+  notes               String?
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  category            Category?            @relation(fields: [categoryId], references: [id])
+  procedureMaterials  ProcedureMaterial[]
+
+  @@map("procedures")
+}
+
+// 시술-재료 연결 테이블
+model ProcedureMaterial {
+  id          Int       @id @default(autoincrement())
+  procedureId Int       @map("procedure_id")
+  materialId  Int       @map("material_id")
+  quantity    Float     @default(1.0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  material    Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([procedureId, materialId])
+  @@map("procedure_materials")
+}
+
+// 대량 업로드 작업 테이블
+model UploadJob {
+  id                String        @id @default(uuid())
+  type              String        // 'materials' | 'procedures'
+  fileName          String        @map("file_name")
+  fileSize          Int?          @map("file_size")
+  originalData      String?       @map("original_data")
+  totalRows         Int           @default(0) @map("total_rows")
+  processedRows     Int           @default(0) @map("processed_rows")
+  successRows       Int           @default(0) @map("success_rows")
+  errorRows         Int           @default(0) @map("error_rows")
+  status            String        @default("pending") // 'pending' | 'processing' | 'completed' | 'failed' | 'rollback'
+  progressPercentage Float        @default(0) @map("progress_percentage")
+  errorDetails      String?       @map("error_details")
+  uploadOptions     String?       @map("upload_options")
+  startedAt         DateTime?     @map("started_at")
+  completedAt       DateTime?     @map("completed_at")
+  createdBy         String?       @map("created_by")
+  createdAt         DateTime      @default(now()) @map("created_at")
+
+  @@map("upload_jobs")
+}
+
+// 가격 변경 이력 테이블
+model PriceHistory {
+  id           Int      @id @default(autoincrement())
+  materialId   Int      @map("material_id")
+  oldPrice     Float    @map("old_price")
+  newPrice     Float    @map("new_price")
+  changedBy    String?  @map("changed_by")
+  changeReason String?  @map("change_reason")
+  changedAt    DateTime @default(now()) @map("changed_at")
+  material     Material @relation(fields: [materialId], references: [id])
+
+  @@map("price_history")
+}

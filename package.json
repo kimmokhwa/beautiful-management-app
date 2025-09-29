@@ -1,0 +1,29 @@
+{
+  "name": "cost-management-system",
+  "version": "1.0.0",
+  "description": "원가관리 웹 시스템",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "start": "cd backend && npm start",
+    "db:generate": "cd backend && npx prisma generate",
+    "db:migrate": "cd backend && npx prisma migrate dev",
+    "db:studio": "cd backend && npx prisma studio"
+  },
+  "keywords": [
+    "cost-management",
+    "clinic",
+    "margin-analysis",
+    "supabase"
+  ],
+  "author": "DD Beautiful",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

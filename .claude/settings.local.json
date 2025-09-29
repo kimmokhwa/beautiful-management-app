@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma generate:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx prisma:*)",
+      "WebFetch(domain:jsbbxqweerywpygbbxdc.supabase.co)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
