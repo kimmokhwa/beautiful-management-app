@@ -24,17 +24,22 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 app.use(cors({
   origin: (origin, callback) => {
     // 개발 환경에서는 localhost의 모든 포트 허용
-    if (!origin || origin.startsWith('http://localhost:')) {
+    if (process.env.NODE_ENV === 'development' && (!origin || origin.startsWith('http://localhost:'))) {
       callback(null, true);
     } else {
       const allowed = (process.env.CORS_ORIGINS || '')
         .split(',')
         .map(o => o.trim())
         .filter(o => o);
-      if (allowed.includes(origin)) {
+      
+      if (allowed.includes(origin || '')) {
         callback(null, true);
-      } else {
+      } else if (process.env.NODE_ENV === 'production') {
+        console.warn(`CORS blocked origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
+      } else {
+        // 개발 환경에서는 허용 (fallback)
+        callback(null, true);
       }
     }
   },

@@ -7,13 +7,20 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:frontend && npm run build:backend",
+    "build": "npm run install:deps && npm run build:frontend && npm run build:backend",
     "build:frontend": "cd frontend && npm run build",
     "build:backend": "cd backend && npm run build",
+    "install:deps": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "start": "cd backend && npm start",
+    "start:prod": "NODE_ENV=production npm start",
+    "preview": "npm run build && npm run start:prod",
     "db:generate": "cd backend && npx prisma generate",
     "db:migrate": "cd backend && npx prisma migrate dev",
-    "db:studio": "cd backend && npx prisma studio"
+    "db:studio": "cd backend && npx prisma studio",
+    "clean": "rm -rf backend/dist frontend/dist backend/node_modules frontend/node_modules node_modules",
+    "postinstall": "npm run install:deps",
+    "test:build": "node scripts/build-test.js",
+    "deploy:check": "npm run test:build && echo '배포 준비 완료! DEPLOYMENT.md를 참고하세요.'"
   },
   "keywords": [
     "cost-management",
